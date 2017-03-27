@@ -60,14 +60,18 @@ module Dragonfly
 
     def read(uid)
       ensure_configured
-      response = rescuing_socket_errors{ storage.get_object(bucket_name, full_path(uid)) }
+      response = rescuing_socket_errors do
+        storage.get_object(bucket_name, full_path(uid), storage_headers)
+      end
       [response.body, headers_to_meta(response.headers)]
     rescue Excon::Errors::NotFound => e
       nil
     end
 
     def destroy(uid)
-      rescuing_socket_errors{ storage.delete_object(bucket_name, full_path(uid)) }
+      rescuing_socket_errors do
+        storage.delete_object(bucket_name, full_path(uid), storage_headers)
+      end
     rescue Excon::Errors::NotFound, Excon::Errors::Conflict => e
       Dragonfly.warn("#{self.class.name} destroy error: #{e}")
     end
